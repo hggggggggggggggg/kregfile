@@ -1,0 +1,33 @@
+#No reverse proxy has been added. Caddy is recommended. 
+#If using Caddy, be sure to add "trusted_proxies PROXIES HERE" 
+#and "header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}" 
+#if using Cloudflare. See Caddy documentation for details.
+#Set the upload path if using a dedicated folder.
+#Comments wrapped at request of Auxo for his accessibility needs.
+version: '3.3'
+
+services:
+  kregfile:
+    image: local/kregfile
+    build: .
+    container_name: kregfile
+#      volumes:
+#        - type: bind
+#          source: ./.config.json
+#          target: /kregfile/.config.json
+#        - /path/to/upload/directory:/kregfile/uploads  
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  redis-kreg:
+    image: redis:6-alpine
+    container_name: redis-kreg
+    command: redis-server --save 60 1 --loglevel warning
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: redis-cli ping
+      interval: 30s
+      timeout: 5s
+      retries: 2
